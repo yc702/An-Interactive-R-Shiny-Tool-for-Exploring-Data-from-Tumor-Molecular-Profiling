@@ -1,0 +1,119 @@
+Gene,Category
+BRAF,RAS-MAPK
+CRAF,RAS-MAPK
+GNAQ,RAS-MAPK
+GNAS,RAS-MAPK
+HRAS,RAS-MAPK
+KRAS,RAS-MAPK
+MAPK1,RAS-MAPK
+NF1,RAS-MAPK
+NF2,RAS-MAPK
+NRAS,RAS-MAPK
+RAF1,RAS-MAPK
+MDM2,TP53
+TP53,TP53
+APC,Stem Cell
+CTNNB1,Stem Cell
+NOTCH1,Stem Cell
+PTCH1,Stem Cell
+AKT1,PI3K-MTOR
+AKT2,PI3K-MTOR
+AKT3,PI3K-MTOR
+ARID1A,PI3K-MTOR
+MTOR,PI3K-MTOR
+PIK3CA,PI3K-MTOR
+PIK3CG,PI3K-MTOR
+PIK3R1,PI3K-MTOR
+PTEN,PI3K-MTOR
+RICTOR,PI3K-MTOR
+RPTOR,PI3K-MTOR
+STK11,PI3K-MTOR
+TSC1,PI3K-MTOR
+TSC2,PI3K-MTOR
+ATM,DNA Repair
+ATR,DNA Repair
+ATRX,DNA Repair
+AURKA,DNA Repair
+AURKB,DNA Repair
+Aurora Kinase,DNA Repair
+BLM,DNA Repair
+BRCA1,DNA Repair
+BRCA2,DNA Repair
+BRIP1,DNA Repair
+CHEK1,DNA Repair
+CHEK2,DNA Repair
+ERCC1,DNA Repair
+FANCA,DNA Repair
+FANCC,DNA Repair
+FANCD2,DNA Repair
+FANCE,DNA Repair
+FANCF,DNA Repair
+FANCG,DNA Repair
+FANCL,DNA Repair
+FANCM ,DNA Repair
+MLH1,DNA Repair
+MSH6,DNA Repair
+PALB2,DNA Repair
+SMARCA4,DNA Repair
+ALK,RTKs
+c-KIT,RTKs
+cMET,RTKs
+EGFR,RTKs
+FGF19,RTKs
+FGF23,RTKs
+FGF3,RTKs
+FGF4,RTKs
+FGF6,RTKs
+FGFR,RTKs
+FGFR1,RTKs
+FGFR10P,RTKs
+FGFR1OP,RTKs
+FGFR2,RTKs
+FGFR3,RTKs
+FGFR4,RTKs
+FLT3,RTKs
+HER2/ERBB2,RTKs
+HER3,RTKs
+IGF1R,RTKs
+KDR(VEGFR2),RTKs
+KIT,RTKs
+MET,RTKs
+PDGFR,RTKs
+PDGFRA,RTKs
+PDGFRB,RTKs
+RET,RTKs
+ROS1,RTKs
+CCND1,Cell Cycle
+CCND2,Cell Cycle
+CCND3,Cell Cycle
+CCNE1,Cell Cycle
+CDK4,Cell Cycle
+CDK6,Cell Cycle
+CDKN2A,Cell Cycle
+CDKN2B,Cell Cycle
+CDKN2C,Cell Cycle
+MYC,Cell Cycle
+RB1,Cell Cycle
+BCL-2,Apoptosis
+BCL2,Apoptosis
+BCL2L1,Apoptosis
+BCL2L2,Apoptosis
+MCL-1,Apoptosis
+MCL1,Apoptosis
+MGMT,Chemopredictive
+PGP,Chemopredictive
+RRM1,Chemopredictive
+SPARC Monoclonal,Chemopredictive
+SPACR Polyclonal,Chemopredictive
+TLE3,Chemopredictive
+TOP2A,Chemopredictive
+TOPO1,Chemopredictive
+TS,Chemopredictive
+TUBB3,Chemopredictive
+AR,Hormone Receptor
+ER,Hormone Receptor
+ESR1,Hormone Receptor
+PR,Hormone Receptor
+PD-1,Immune
+PD-L1,Immune
+VEGFA,VEGFs

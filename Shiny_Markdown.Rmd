@@ -1,0 +1,594 @@
+---
+title: | 
+ | Patient Molecular Profiling Caris Data:  
+ | R/Shiny DataViz Showcase 
+author: "Yi Chen"
+date:    '`r format(Sys.Date(), "%B %d, %Y")`'
+output: 
+  html_document:
+runtime: shiny
+---
+
+```{r echo=FALSE,warning=FALSE,cache=FALSE,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DT)
+library(markdown)
+library(shinythemes)
+library(corrplot)
+source("Circle plot.R")
+library(dplyr)
+
+```
+
+
+### Introduction
+
+**This Shiny App allows for the following displays:**
+
+1. **Heatmaps/tables of biomarkers for _disease_ and _disease category_, by _technology_ and _actionability_:** 
+    * Heatmap
+        + Sort the top 50 biomarkers that have been most mutated among patients
+        + Color can be Red/Green or Blue/Yellow
+    * Table
+        + Table has first 12 columns from raw data
+        + Table allows for sorting and searching
+  
+2. **Biomarker correlation circle plot by _technology_:**
+    * Only consider predetermined set of biomarkers (may expand in the future) filtered by technology
+
+### Shiny App
+```{r echo=FALSE,warning=FALSE,cache=FALSE}
+shinyApp(
+  options=list(width = "110%",height=2300),
+  
+# Heatmap by Disease Categories
+ui = navbarPage("Theme",
+            theme = shinytheme("cerulean"),
+            tabPanel("Disease Category",
+            titlePanel("Heatmap and Table by Disease Categories"),
+            fluidRow(column(3,
+                             h4("Disease Category Explorer"),
+                             # Copy the chunk below to make a group of checkboxes
+                    checkboxGroupInput("checkdisease.dc", "Disease Categories",
+                                       choices = unique(my.molecular[!is.na(my.molecular$Disease.Category),]$Disease.Category)),
+                    radioButtons("Color.dc", "Color Type",choices=list("Red Green"="red_green","Blue Yellow"="blue_lightgoldenrod1"))
+
+                             ),
+                    column(5,offset=2,selectInput("Tech.dc", "Technology Type",choices = sort(unique(my.molecular$Technology[(!is.na(my.molecular$Disease.Category))&(!is.na(my.molecular$Disease))]))),
+                    checkboxGroupInput("actionability.dc", "Actionability Assessment Levels",
+                                       choices = unique(Actionability$Actionability)),
+
+                    helpText("Level 1: can be targeted by approved drugs
+"),
+helpText("Level 2: can be targeted by investigational drugs
+"))),
+tweaks <-
+                    list(tags$head(tags$style(HTML("
+                                 .multicol {
+                                   height: 63px;
+                                   -webkit-column-count: 8; /* Chrome, Safari, Opera */
+                                   -moz-column-count: 8;    /* Firefox */
+                                   column-count: 8;
+                                   -moz-column-fill: auto;
+                                   -column-fill: auto;
+                                 }
+                                 "))
+                                 )) ,
+fluidRow(column(12,
+
+                           controls <-list(tags$div(align = 'left',
+                class = 'multicol',
+                checkboxGroupInput(inputId  = 'functional.dc',
+                label    = "Functional Category",
+                choices  = sort(unique(Functional$Category)),
+                inline   = FALSE))))),
+
+
+                    tags$hr(),
+                     fluidRow(
+      tabsetPanel(type = "tabs",
+        tabPanel("Heatmap", 
+                 plotOutput("heatmap.dc",height="600px",width="100%"),
+                 h5("Reference"),verbatimTextOutput("value.dc")),
+        tabPanel("Table", DT::dataTableOutput('ex1'))
+      ))),
+
+
+           tabPanel("Disease",
+                    titlePanel("Heatmap and Table by Disease"),
+                    # Copy the chunk below to make a group of checkboxes
+                    tweaks2 <-
+                      list(tags$head(tags$style(HTML("
+                                                     .multicol2 {
+                                                     height: 450px;
+                                                     -webkit-column-count: 4; /* Chrome, Safari, Opera */
+                                                     -moz-column-count: 4;    /* Firefox */
+                                                     column-count: 4;
+                                                     -moz-column-fill: auto;
+                                                     -column-fill: auto;
+                                                     }
+                                                     "))
+                      )),
+#
+                    controls2 <-
+                      list(h4("Disease Explorer"),
+                           tags$div(align = 'left',
+                                    class = 'multicol2',
+                                    checkboxGroupInput(inputId  = 'checkdisease.d',
+                                                       label    = "Disease",
+                                                       choices  = sort(unique(my.molecular[!is.na(my.molecular$Disease),]$Disease)),
+                                                       inline   = FALSE))),
+                    fluidRow(
+                      column(3,
+                             radioButtons("Color.d", "Color Type",choices=list("Red Green"="red_green",
+                                                                      "Blue Yellow"="blue_lightgoldenrod1")),selectInput("Tech.d", "Technology Type",choices = sort(unique(my.molecular$Technology)))
+                             ),
+                      column(6,offset=3,
+
+                    checkboxGroupInput("actionability.d", "Actionability Assessment Levels",
+                                       choices = unique(Actionability$Actionability)),
+
+                    helpText("Level 1: can be targeted by approved drugs
+"),
+helpText("Level 2: can be targeted by investigational drugs
+")
+                             )
+                    ),
+tweaks <-
+                    list(tags$head(tags$style(HTML("
+                                 .multicol {
+                                   height: 63px;
+                                   -webkit-column-count: 8; /* Chrome, Safari, Opera */
+                                   -moz-column-count: 8;    /* Firefox */
+                                   column-count: 8;
+                                   -moz-column-fill: auto;
+                                   -column-fill: auto;
+                                 }
+                                 "))
+                                 )) ,
+fluidRow(column(12,
+
+                controls <-list(tags$div(align = 'left',
+                class = 'multicol',
+                checkboxGroupInput(inputId  = 'functional.d',
+                label    = "Functional Category",
+                choices  = sort(unique(Functional$Category)),
+                inline   = FALSE))))),
+                    tags$hr(),
+
+                    fluidRow(
+                      plotOutput("heatmap.d",height="600px",width="100%"),
+                      h5("Reference"),verbatimTextOutput("value.d"),
+                      DT::dataTableOutput('ex2')
+
+                    )),
+           tabPanel("Correlation Plot by Technology",
+                    titlePanel("Biomarker Correlation Circle Plot by Technology"),
+                    # Copy the chunk below to make a group of checkboxes
+
+                    
+                        fluidRow(column(3,wellPanel(
+                          selectInput("Tech.cir", "Technology Type",choices = name),
+                    selectInput("Tech.cir2", "Technology Type Comparing",choices = name),
+
+
+                    helpText("Red for positive and Blue for negative correlation"),
+                    helpText("The higher correlation, the darker the color"),
+                    helpText("Circle plot color based on quantile for both positive and negative values")
+                    
+                    # helpText("Color classification is based on quantile: positive: (0.132,0.280,0.348,0.576), negative: (-0.0024,-0.0070,-0.0108,-0.016)")
+                        )),
+                    
+
+
+                    # tags$hr(),
+
+                    mainPanel(
+        tabsetPanel(type = "tabs",
+        tabPanel("Circle Plot", plotOutput("circle.dc",height="800",width="100%")),
+        tabPanel("Correlation Matrix", plotOutput("corplot.dc",height="800",width="100%"))
+      ))))),
+
+
+
+
+## Update filtered dataset and calculation of correlation
+
+server=function(input, output){
+  output$heatmap.dc <- renderPlot ({
+    
+    label_change<-c( as.character(Legend.label$Positive[Legend.label$Label==input$Tech.dc]),as.character(Legend.label$Negative[Legend.label$Label==input$Tech.dc]))
+    data<-my.molecular[(!is.na(my.molecular$Disease.Category))&(!is.na(my.molecular$PatientID)),]
+    update.data<-data[which(data$Technology%in%input$Tech.dc),]
+    gene<-unique(update.data$Biomarker)
+    # Heatmap by Disease Categories
+    
+    if(is.null(input$checkdisease.dc)){
+      
+      if(is.null(input$actionability.dc)){
+      if (is.null(input$functional.dc)){
+        if (length(gene)<50){
+        plot.heatmap(update.data,
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease.Category',facetangle=0,legends=label_change,xlab = 'Patient', ylab = 'Gene',color=input$Color.dc,
+                     title='')
+        
+        
+      }
+      
+      else {
+        sum.gene<-sapply(gene,function(x) sum(update.data[update.data$Biomarker==x,]$Positive))
+        names(sum.gene)<-gene
+        select.gene<-names(sort(sum.gene,decreasing = TRUE))[1:50]
+        
+          plot.heatmap(update.data[which(update.data$Biomarker%in%select.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',facetangle=0,
+                     category.x = 'Disease.Category',color=input$Color.dc,
+                     xlab = 'Patient', ylab = 'Gene',legends=label_change,
+                     title='')
+          }
+        }
+      else{
+        if (!(nrow(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.dc]),]) > 0)){
+    warning('There is no biomarker in this Functional Category')
+      }
+      else{
+        
+      # if (length(gene)<50){
+        plot.heatmap(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.dc]),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease.Category',facetangle=0,legends=label_change,xlab = 'Patient', ylab = 'Gene',color=input$Color.dc,
+                     title='')
+      
+        
+      }}}
+    else{
+      action.gene<-unique(Actionability$Gene[Actionability$Actionability%in%input$actionability.dc])
+      if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene),]) > 0)){
+    warning('There is no biomarker in this level.')
+      }
+      else{
+        if (is.null(input$functional.dc)){
+          plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease.Category',facetangle=0,legends=label_change,
+                     xlab = 'Patient', ylab = 'Gene',color=input$Color.dc,
+                     title='')
+        }
+        else{
+          if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene&update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.dc]),]) > 0)){
+    warning('There is no biomarker in this Functional Category')
+      }
+      else{
+        plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene& update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.dc]),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease.Category',facetangle=0,legends=label_change,
+                     xlab = 'Patient', ylab = 'Gene',color=input$Color.dc,
+                     title='')
+      }
+        }
+      }
+      
+    }}
+    
+    else{
+      
+      update.data<-update.data[which(update.data$Disease.Category%in%input$checkdisease.dc),]
+      gene<-unique(update.data$Biomarker)
+
+      if(is.null(input$actionability.dc)){
+              if (is.null(input$functional.dc)){
+                if (length(gene)<50){
+        
+        
+        plot.heatmap(update.data,legends=label_change,
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',facetangle=0,
+                     category.x = 'Disease.Category',color=input$Color.dc,
+                     xlab = 'Patient', ylab = 'Gene',
+                     title='')
+        
+        }
+      else {
+        sum.gene<-sapply(gene,function(x) sum(update.data[which( update.data$Biomarker%in%x),]$Positive))
+        names(sum.gene)<-gene
+        select.gene<-names(sort(sum.gene,decreasing = TRUE))[1:50]
+        
+        plot.heatmap(update.data[which(update.data$Biomarker%in%select.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',facetangle=0,
+                     category.x = 'Disease.Category',color=input$Color.dc,
+                     xlab = 'Patient', ylab = 'Gene',legends=label_change,
+                     title='')
+      }
+              }
+        
+    else{
+      if (!(nrow(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category==input$functional.dc]),]) > 0)){
+    warning('There is no biomarker in this Functional Category')
+      }
+      else{
+        plot.heatmap(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.dc]),],legends=label_change,           x = 'PatientID', y = 'Biomarker', response = 'Positive',facetangle=0,
+                     category.x = 'Disease.Category',color=input$Color.dc,
+                     xlab = 'Patient', ylab = 'Gene',
+                     title='')
+    }}}
+      
+      
+      else{
+        
+        action.gene<-unique(Actionability$Gene[Actionability$Actionability%in%input$actionability.dc])
+        if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene),]) > 0)){
+            warning('There is no biomarker in this level.')
+        }
+        else{
+          if (is.null(input$functional.dc)){
+            plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease.Category',facetangle=0,legends=label_change,
+                     xlab = 'Patient', ylab = 'Gene',color=input$Color.dc,
+                     title='')
+          }
+          else{
+          
+          if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene&update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.dc]),]) > 0)){
+    warning('There is no biomarker in this Functional Category')
+      }
+      else{
+          
+        plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene& update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.dc]),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease.Category',facetangle=0,legends=label_change,
+                     xlab = 'Patient', ylab = 'Gene',color=input$Color.dc,
+                     title='')
+          }
+      
+      }}
+    
+  }}}) 
+  
+  output$ex1<-DT::renderDataTable( 
+    
+
+        if(is.null(input$checkdisease.dc)){
+          
+
+      DT::datatable(my.molecular[(!is.na(my.molecular$Disease.Category))&my.molecular$Technology==input$Tech.dc,1:12],options=list(pageLength=10))
+    }
+    else{
+
+      DT::datatable(my.molecular[(!is.na(my.molecular$Disease.Category))&(my.molecular$Disease.Category==input$checkdisease.dc)&(my.molecular$Technology==input$Tech.dc),1:12],options=list(pageLength=10))
+    }
+  )
+  
+    
+  output$value.dc<-renderText({
+
+        
+    paste(as.character(Legend.label$Note[as.character(Legend.label$Label)==input$Tech.dc]),
+    "White color in heatmap means missing value",sep="\n")
+  })
+ 
+  output$circle.dc<-renderPlot( {
+    name<-sort(unlist(unname(sapply(names(correlation),function(x) x[which(sum(!is.na(correlation[[x]]))!=0)]))))
+    color.division<-unique(unlist(correlation))
+    color.pos<-color.division[color.division>0]
+    color.neg<-color.division[color.division<0]
+    pos<-quantile(color.pos,na.rm=TRUE)
+    neg<-quantile(color.neg,na.rm=TRUE)
+
+
+
+    circle.plot2(input$Tech.cir,input$Tech.cir2)
+    
+  }, height = 780, width = 750)
+  
+  
+  output$corplot.dc<-renderPlot({
+    par(mar=c(5.1,4.1,4.1,2.1))
+    
+
+    # name<-sort(unlist(unname(sapply(names(correlation),function(x) x[which(sum(!is.na(correlation[[x]]))!=0)]))))
+    # color.division<-unique(unlist(correlation))
+    # color.pos<-color.division[color.division>0]
+    # color.neg<-color.division[color.division<0]
+    # pos<-quantile(color.pos,na.rm=TRUE)
+    # neg<-quantile(color.neg,na.rm=TRUE)
+
+
+    
+    
+    plot.data<-plot.data.pre(input$Tech.cir,input$Tech.cir2)
+  
+    if (!is.matrix(plot.data)){
+  warning(plot.data)
+}
+else{
+  if (input$Tech.cir==input$Tech.cir2){
+        diag(plot.data)<-1
+
+  }
+      colnames(plot.data)<-paste(colnames(plot.data),input$Tech.cir,sep=" ")
+      rownames(plot.data)<-paste(rownames(plot.data),input$Tech.cir2,sep=" ")
+      corrplot(plot.data,tl.col="black",tl.cex=1,insig = "blank",method="color",na.label = "NA",col=rev(brewer.pal(8,"RdYlBu")))}
+    }, height = 780, width = 750)
+  
+  output$heatmap.d <- renderPlot ({
+
+    
+    # Heatmap by Disease
+    
+    label_change<-c(as.character(Legend.label$Positive[Legend.label$Label==input$Tech.d]),as.character(Legend.label$Negative[Legend.label$Label==input$Tech.d]))
+    data<-my.molecular[which((!is.na(my.molecular$Disease))&(!is.na(my.molecular$PatientID))),]
+    update.data<-data[which(data$Technology==input$Tech.d),]
+    gene<-unique(update.data$Biomarker)
+    
+    # Heatmap by Disease
+    if(is.null(input$checkdisease.d)){
+      if(is.null(input$actionability.d)){
+        if (is.null(input$functional.d)){
+          if (length(gene)<50){
+        
+        
+        plot.heatmap(update.data,legends=label_change,
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',color=input$Color.d,
+                     xlab = 'Patient', ylab = 'Gene',
+                     title='')
+        
+        
+      }
+      else {
+        sum.gene<-sapply(gene,function(x) sum(update.data[update.data$Biomarker==x,]$Positive))
+        names(sum.gene)<-gene
+        select.gene<-names(sort(sum.gene,decreasing = TRUE))[1:50]
+        
+        plot.heatmap(update.data[which(update.data$Biomarker%in%select.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',color=input$Color.d,
+                     xlab = 'Patient', ylab = 'Gene',legends=label_change,
+                     title='')
+        
+        
+        
+      }}
+        else{
+        if (!(nrow(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),]) > 0)){
+    warning('There is no biomarker in this Functional Category')
+      }
+      else{
+      plot.heatmap(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',color=input$Color.d,
+                     xlab = 'Patient', ylab = 'Gene',legends=label_change,
+                     title='')
+        }}
+        }
+
+      
+    else{
+      action.gene<-unique(Actionability$Gene[Actionability$Actionability%in%input$actionability.d])
+      if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene),]) > 0)){
+    warning('There is no biomarker in this level.')
+      }
+      else{
+        if (is.null(input$functional.d)){
+        plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',legends=label_change,
+                     xlab = 'Patient', ylab = 'Gene',color=input$Color.d,
+                     title='')
+        }
+        
+        else{
+          if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene&update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),]) > 0)){
+    warning('There is no biomarker in this Functional Category')
+      }
+      else{
+        plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene& update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',legends=label_change,
+                     xlab = 'Patient', ylab = 'Gene',color=input$Color.d,
+                     title='')
+        
+
+        }
+    }}}}
+    
+    else{
+      if (!(nrow(update.data[which(update.data$Disease%in%input$checkdisease.d),]) > 0)){
+    warning('There is no patient in the sample for this Technology.')
+      }
+      else {
+        update.data<-update.data[which(update.data$Disease%in%input$checkdisease.d),]
+        gene<-unique(update.data$Biomarker)
+      if(is.null(input$actionability.d)){
+        if (is.null(input$functional.d)){
+          if (length(gene)<50){
+        plot.heatmap(update.data,
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',color=input$Color.d,
+                     xlab = 'Patient', ylab = 'Gene',legends=label_change,
+                     title='')
+        
+        }
+        else{
+          sum.gene<-sapply(gene,function(x) sum(update.data[which(update.data$Biomarker%in%x),]$Positive))
+        names(sum.gene)<-gene
+        select.gene<-names(sort(sum.gene,decreasing = TRUE))[1:50]
+        
+        
+        plot.heatmap(update.data[which(update.data$Biomarker%in%select.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',color=input$Color.d,
+                     xlab = 'Patient', ylab = 'Gene',legends=label_change,
+                     title='')
+        
+        
+        }
+          
+        }
+        else{
+          if (!(nrow(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),]) > 0)){
+    warning('There is no biomarker in this Functional Category')
+      }
+      else{
+      
+        plot.heatmap(update.data[which(update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',legends=label_change,
+                     xlab = 'Patient', ylab = 'Gene',color=input$Color.d,
+                     title='')
+        }
+        
+      
+      }}
+      else{
+        
+        action.gene<-unique(Actionability$Gene[Actionability$Actionability%in%input$actionability.d])
+        if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene),]) > 0)){
+            warning('There is no biomarker in this level.')
+        }
+      else {
+        if (is.null(input$functional.dc)){
+            plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',color=input$Color.d,
+                     xlab = 'Patient',ylab = 'Gene',legends=label_change,
+                     title='')
+          
+        }
+        else{
+      if (!(nrow(update.data[which(update.data$Biomarker%in%action.gene&update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),]) > 0)){
+    warning('There is no patient in the sample for this Technology.')
+      }
+      else {
+        plot.heatmap(update.data[which(update.data$Biomarker%in%action.gene & update.data$Biomarker%in%Functional$Gene[Functional$Category%in%input$functional.d]),],
+                     x = 'PatientID', y = 'Biomarker', response = 'Positive',
+                     category.x = 'Disease',color=input$Color.d,
+                     xlab = 'Patient',ylab = 'Gene',legends=label_change,
+                     title='')
+        
+      
+        }
+      
+    }}}}}
+  })
+  output$value.d<-renderText({
+    paste(as.character(Legend.label$Note[as.character(Legend.label$Label)==input$Tech.d]),
+    "White color in heatmap means missing value",sep="\n")
+  })
+  
+  output$ex2<-DT::renderDataTable(
+    if(is.null(input$checkdisease.d)){
+
+      DT::datatable(my.molecular[which(my.molecular$Technology==input$Tech.d),1:12],options=list(pageLength=10))
+    }
+    else{
+
+      DT::datatable(my.molecular[which(my.molecular$Disease==input$checkdisease.d & my.molecular$Technology==input$Tech.d),1:12],options=list(pageLength=10))
+    }
+    
+  )
+
+})
+```
+

@@ -1,0 +1,16 @@
+Label,Positive,Negative,Note
+CISH,Amplified,Probably Not Amplified,Probably Not Amplified include: Amplification Not Detected/QNS (Quantity Not Sufficient)
+CNV,Amplified,Probably Not Amplified,Probably Not Amplified include: Amplification Not Detected/QNS (Quantity Not Sufficient)
+FA,MSI-High,Negative/Stable, 
+FISH,Amplified,Probably Not Amplified,Probably Not Amplified include: Amplification Not Detected/QNS (Quantity Not Sufficient)
+FISH-Mutational,Positive,Negative, 
+Fusion,Fusion Detected,Fusion Not Detected, 
+IHC,Positive,Negative, 
+IHC H-Score,Positive,Negative, 
+Microarray-Illumina,Positive,Others,"Others include no change, over expressed and under expressed"
+Molecular,Mutated,Wild Type, 
+Next Gen SEQ,Pathogenic,Wild Type, 
+NGS Q2,Pathogenic,Wild Type, 
+NGS Q3,Pathogenic,Wild Type, 
+RT-PCR,High,Low, 
+Sanger SEQ,Pathogenic,Wild Type, 
