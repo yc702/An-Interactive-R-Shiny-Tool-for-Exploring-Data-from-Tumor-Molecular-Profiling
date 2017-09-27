@@ -182,29 +182,28 @@ plot.data.pre<-function(x,y){
         }    }}}}
 
 circle.plot2<-function(x,y) {
+  plot.data=plot.data.pre(x,y)
+
+  if (!is.matrix(plot.data)){
+    warning(plot.data)
+  }
+  else{
   
-plot.data=plot.data.pre(x,y)
-
-if (!is.matrix(plot.data)){
-  warning(plot.data)
-}
-else{
-
-cols <- rev(brewer.pal(8,"RdYlBu"))
-
-
-matCols <- matrix("#FFFFFF", nrow=nrow(plot.data), ncol=ncol(plot.data))
-matCols[plot.data < 0] <- cols[4]
-matCols[plot.data < -neg[2]] <- cols[3]
-matCols[plot.data < neg[3]] <- cols[2]
-matCols[plot.data < neg[4]] <- cols[1]
-
-matCols[plot.data > 0] <- cols[5]
-matCols[plot.data > pos[2]] <- cols[6]
-matCols[plot.data > pos[3]] <- cols[7]
-matCols[plot.data > pos[4]] <- cols[8]
-
-if (x==y){
+  cols <- rev(brewer.pal(8,"RdYlBu"))
+  
+  
+  matCols <- matrix("#FFFFFF", nrow=nrow(plot.data), ncol=ncol(plot.data))
+  matCols[plot.data < 0] <- cols[4]
+  matCols[plot.data < -neg[2]] <- cols[3]
+  matCols[plot.data < neg[3]] <- cols[2]
+  matCols[plot.data < neg[4]] <- cols[1]
+  
+  matCols[plot.data > 0] <- cols[5]
+  matCols[plot.data > pos[2]] <- cols[6]
+  matCols[plot.data > pos[3]] <- cols[7]
+  matCols[plot.data > pos[4]] <- cols[8]
+  
+  if (x==y){
   
 
     i=1.3
@@ -219,8 +218,8 @@ if (x==y){
       circos.text(mean(xlim), 1.3, sector.name, facing = "clockwise",
                   niceFacing = TRUE, adj = c(0.05,0),cex=1)
     }, bg.border = NA)
-}
-else{
+  }
+  else{
   
 
     colnames(plot.data)<-paste(colnames(plot.data),strsplit(x,split="[ \\|,+-]+")[[1]][1],sep=" ")
