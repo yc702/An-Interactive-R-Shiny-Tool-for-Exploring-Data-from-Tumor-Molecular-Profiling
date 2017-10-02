@@ -13,3 +13,9 @@ An Interactive R/Shiny Tool for Exploring Data from Tumor Molecular Profiling
   
 2. **Biomarker correlation circle plot by _technology_:**
     * Only consider predetermined set of biomarkers (may expand in the future) filtered by technology
+    
+3. **Steps to run R Shiny App:**
+    * The dataset has not been uploaded so the app does not work at this time;
+    * The app should be open using the _Shiny_Markdown.Rmd_ file and the rest of the files are the helper functions;
+    * The datasets of _Actionability Assessment.csv_ and _Functional Category.csv_ contain information of the gene actionability levels and functional categories that the genes belong to.
+
