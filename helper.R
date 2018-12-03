@@ -4,7 +4,7 @@ Actionability<- read.csv("./Actionability Assessment.csv")
 Functional<- read.csv("./Functional Category.csv")
 Legend.label<- read.csv("./Legend.csv")
 
-load("molecular_data.RData")
+load("../molecular_data.RData")
 
 source("functions.R")
 
